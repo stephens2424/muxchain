@@ -15,7 +15,7 @@ func main() {
 	muxchain.Chain("/", logMux(), echoHandler)
 	muxchain.Chain("/noecho/", logMux())
 	muxchain.Chain("/auth/", logMux(), authHandler, echoHandler)
-	http.ListenAndServe(":36363", muxchain.DefaultMuxChain)
+	http.ListenAndServe(":36363", muxchain.Default)
 }
 
 func logMux() *http.ServeMux {
