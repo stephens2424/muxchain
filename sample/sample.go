@@ -13,10 +13,10 @@ func main() {
 	echoHandler := http.HandlerFunc(echo)
 	authHandler := http.HandlerFunc(auth)
 
-	muxchain.Chain("/", logMux(), echoHandler)
-	muxchain.Chain("/noecho/", logMux())
-	muxchain.Chain("/auth/", logMux(), authHandler, echoHandler)
-	http.ListenAndServe(":36363", newGzip(muxchain.Default))
+	muxchain.Chain("/", logMux(), muxchain.ChainedHandlerFunc(Gzip), echoHandler)
+	muxchain.Chain("/noecho/", muxchain.ChainedHandlerFunc(Gzip), logMux())
+	muxchain.Chain("/auth/", logMux(), muxchain.ChainedHandlerFunc(Gzip), authHandler, echoHandler)
+	http.ListenAndServe(":36363", muxchain.Default)
 }
 
 func logMux() *http.ServeMux {
@@ -42,14 +42,12 @@ func auth(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func newGzip(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Add("Content-Encoding", "gzip")
-		w.Header().Add("Content-Type", "text/html")
-		g, gw := NewGzipResponse(w)
-		defer g.Close()
-		h.ServeHTTP(gw, req)
-	})
+func Gzip(w http.ResponseWriter, req *http.Request, handlers ...http.Handler) {
+	w.Header().Add("Content-Encoding", "gzip")
+	w.Header().Add("Content-Type", "text/html")
+	g, gw := NewGzipResponse(w)
+	defer g.Close()
+	muxchain.HandleChain(gw, req, handlers...)
 }
 
 type GzipResponse struct {

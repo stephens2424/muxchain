@@ -26,28 +26,67 @@ func (m *MuxChain) Chain(pattern string, handlers ...http.Handler) {
 		if len(handlers) == 0 {
 			http.NotFound(w, req)
 		}
-		for i, h := range handlers {
-			if m.handle(h, i < len(handlers)-1, w, req) {
-				return
-			}
-		}
+		HandleChain(w, req, handlers...)
 	})
+}
+
+// HandleChain is the utility function chained handlers are responsible for calling
+// when they are complete.
+func HandleChain(w http.ResponseWriter, req *http.Request, handlers ...http.Handler) {
+	for i, h := range handlers {
+		var remaining []http.Handler
+		if len(handlers) > i+1 {
+			remaining = handlers[i+1:]
+		}
+		if handle(h, remaining, w, req) {
+			return
+		}
+	}
+}
+
+// ChainedHander allows implementers to call the handlers after them in a muxchain
+// on their own. This allows handlers to defer functions until after the handler
+// chain following them has been completed.
+type ChainedHandler interface {
+	http.Handler
+
+	// ServeHTTPChain allows the handler to do its work and then call the remaining
+	// handler chain. Implementers should call muxchain.HandleChain when complete.
+	ServeHTTPChain(w http.ResponseWriter, req *http.Request, h ...http.Handler)
+}
+
+// ChainedHandlerFunc represents a handler that is able to be chained to subsequent handlers.
+type ChainedHandlerFunc func(w http.ResponseWriter, req *http.Request, handlers ...http.Handler)
+
+// ServeHTTP allows ChainedHandlerFuncs to implement http.Handler
+func (c ChainedHandlerFunc) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	c(w, req, nil)
+}
+
+// ServeHTTPChain allows ChainedHandlerFuncs to be identified
+func (c ChainedHandlerFunc) ServeHTTPChain(w http.ResponseWriter, req *http.Request, handlers ...http.Handler) {
+	c(w, req, handlers...)
 }
 
 // handle runs and attempts to serve on the current handler. It returns true if data
 // was written to the response writer.
-func (m *MuxChain) handle(h http.Handler, lastHandler bool, w http.ResponseWriter, req *http.Request) bool {
+func handle(h http.Handler, remaining []http.Handler, w http.ResponseWriter, req *http.Request) bool {
 	// Is the current handler a Muxer?
 	if childMux, ok := h.(Muxer); ok {
 		_, p := childMux.Handler(req)
 		// Ignore this handler if this ServeMux doesn't apply, unless we have no more handlers
-		if p == "" && !lastHandler {
+		if p == "" && len(remaining) == 0 {
 			return true
 		}
 	}
 
-	// Serve for the current handler
 	cw := &checked{w, false}
+	if chainedHandler, ok := h.(ChainedHandler); ok {
+		chainedHandler.ServeHTTPChain(cw, req, remaining...)
+		return true
+	}
+
+	// Serve for the current handler
 	h.ServeHTTP(cw, req)
 	return cw.written
 }
