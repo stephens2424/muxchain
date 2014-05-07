@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"io"
 	"log"
 	"net/http"
@@ -32,6 +31,7 @@ func logMux() *http.ServeMux {
 }
 
 func echo(w http.ResponseWriter, req *http.Request) {
+	w.Header().Add("Content-Type", "text/html")
 	io.WriteString(w, req.URL.Path)
 }
 
@@ -41,33 +41,4 @@ func auth(w http.ResponseWriter, req *http.Request) {
 	} else {
 		http.Error(w, "?auth=yes required", http.StatusForbidden)
 	}
-}
-
-func Gzip(w http.ResponseWriter, req *http.Request, handlers ...http.Handler) {
-	w.Header().Add("Content-Encoding", "gzip")
-	w.Header().Add("Content-Type", "text/html")
-	g, gw := NewGzipResponse(w)
-	defer g.Close()
-	muxchain.HandleChain(gw, req, handlers...)
-}
-
-type GzipResponse struct {
-	http.ResponseWriter
-	w *gzip.Writer
-}
-
-func NewGzipResponse(w http.ResponseWriter) (*gzip.Writer, http.ResponseWriter) {
-	g := gzip.NewWriter(w)
-	return g, &GzipResponse{w, g}
-}
-
-func (g *GzipResponse) Write(p []byte) (int, error) {
-	return g.w.Write(p)
-}
-
-func (g *GzipResponse) Flush() error {
-	if flusher, ok := g.ResponseWriter.(http.Flusher); ok {
-		flusher.Flush()
-	}
-	return g.w.Flush()
 }
