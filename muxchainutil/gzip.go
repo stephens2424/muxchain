@@ -7,11 +7,12 @@ import (
 	"stephensearles.com/muxchain"
 )
 
+// Gzip is a handler that enables gzip content encoding for all handlers
+// chained after it. It adds the Content-Encoding header to the response.
 var Gzip = muxchain.ChainedHandlerFunc(gzipHandler)
 
 func gzipHandler(w http.ResponseWriter, req *http.Request, h ...http.Handler) {
 	w.Header().Add("Content-Encoding", "gzip")
-	w.Header().Add("Content-Type", "text/html")
 	g, gw := newGzipResponse(w)
 	defer g.Close()
 	muxchain.HandleChain(gw, req, h...)

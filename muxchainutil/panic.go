@@ -6,6 +6,8 @@ import (
 	"stephensearles.com/muxchain"
 )
 
+// DefaultPanicRecovery is a handler that enables basic panic recovery
+// for all handlers chained after it.
 var DefaultPanicRecovery = PanicRecovery{http.HandlerFunc(DefaultRecoverFunc)}
 
 func DefaultRecoverFunc(w http.ResponseWriter, req *http.Request) {
