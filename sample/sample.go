@@ -7,15 +7,16 @@ import (
 	"net/http"
 
 	"stephensearles.com/muxchain"
+	"stephensearles.com/muxchain/muxchainutil"
 )
 
 func main() {
 	echoHandler := http.HandlerFunc(echo)
 	authHandler := http.HandlerFunc(auth)
 
-	muxchain.Chain("/", logMux(), muxchain.ChainedHandlerFunc(Gzip), echoHandler)
-	muxchain.Chain("/noecho/", muxchain.ChainedHandlerFunc(Gzip), logMux())
-	muxchain.Chain("/auth/", logMux(), muxchain.ChainedHandlerFunc(Gzip), authHandler, echoHandler)
+	muxchain.Chain("/", logMux(), muxchainutil.Gzip, echoHandler)
+	muxchain.Chain("/noecho/", muxchainutil.Gzip, logMux())
+	muxchain.Chain("/auth/", logMux(), muxchainutil.Gzip, authHandler, echoHandler)
 	http.ListenAndServe(":36363", muxchain.Default)
 }
 
