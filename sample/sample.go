@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,9 +14,13 @@ func main() {
 	echoHandler := http.HandlerFunc(echo)
 	authHandler := http.HandlerFunc(auth)
 
+	pathHandler := muxchainutil.NewPathMuxer()
+	pathHandler.Handle("/id/:id", echoHandler)
+
 	muxchain.Chain("/", logMux(), muxchainutil.Gzip, echoHandler)
 	muxchain.Chain("/noecho/", muxchainutil.Gzip, logMux())
 	muxchain.Chain("/auth/", logMux(), muxchainutil.Gzip, authHandler, echoHandler)
+	muxchain.Chain("/id/", logMux(), muxchainutil.Gzip, pathHandler)
 	http.ListenAndServe(":36363", muxchain.Default)
 }
 
@@ -32,6 +37,10 @@ func logMux() *http.ServeMux {
 
 func echo(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
+	if id := req.FormValue("id"); id != "" {
+		fmt.Fprintf(w, "Your id is %s", id)
+		return
+	}
 	io.WriteString(w, req.URL.Path)
 }
 
