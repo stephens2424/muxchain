@@ -13,6 +13,10 @@ type MuxChain struct {
 	*http.ServeMux
 }
 
+func (m *MuxChain) ServeHTTPChain(w http.ResponseWriter, req *http.Request, handlers ...http.Handler) {
+	HandleChain(w, req, handlers...)
+}
+
 // Chain registers a pattern to a sequence of http.Handlers. Upon receiving a request,
 // the mux chain will find the best matching pattern and call that chain of handlers.
 // The handlers will be called in turn until one of them writes a response or the end
