@@ -14,7 +14,7 @@ type PathMux struct {
 
 // NewPathMuxer initializes a PathMux.
 func NewPathMux() *PathMux {
-	return &PathMux{NewGlobMuxer(), make(map[string]map[int]string)}
+	return &PathMux{NewGlobMux(), make(map[string]map[int]string)}
 }
 
 // Handle registers a handler to a pattern. Patterns may conatain variable components

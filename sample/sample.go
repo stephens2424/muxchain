@@ -14,7 +14,7 @@ func main() {
 	echoHandler := http.HandlerFunc(echo)
 	authHandler := http.HandlerFunc(auth)
 
-	pathHandler := muxchainutil.NewPathMuxer()
+	pathHandler := muxchainutil.NewPathMux()
 	pathHandler.Handle("/id/:id", echoHandler)
 
 	muxchain.Chain("/", logMux(), muxchainutil.Gzip, echoHandler)
