@@ -13,14 +13,18 @@ import (
 func main() {
 	echoHandler := http.HandlerFunc(echo)
 	authHandler := http.HandlerFunc(auth)
+	deleteDenier := muxchainutil.NewMethodMux()
+	deleteDenier.Handle("DELETE /", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		http.Error(w, "delete is not allowed", http.StatusForbidden)
+	}))
 
 	pathHandler := muxchainutil.NewPathMux()
 	pathHandler.Handle("/id/:id", echoHandler)
 
-	muxchain.Chain("/", logMux(), muxchainutil.Gzip, echoHandler)
-	muxchain.Chain("/noecho/", muxchainutil.Gzip, logMux())
-	muxchain.Chain("/auth/", logMux(), muxchainutil.Gzip, authHandler, echoHandler)
-	muxchain.Chain("/id/", logMux(), muxchainutil.Gzip, pathHandler)
+	muxchain.Chain("/", logMux(), muxchainutil.Gzip, deleteDenier, echoHandler)
+	muxchain.Chain("/noecho/", muxchainutil.Gzip, logMux(), deleteDenier)
+	muxchain.Chain("/auth/", logMux(), muxchainutil.Gzip, authHandler, deleteDenier, echoHandler)
+	muxchain.Chain("/id/", logMux(), muxchainutil.Gzip, pathHandler, deleteDenier)
 	http.ListenAndServe(":36363", muxchain.Default)
 }
 
