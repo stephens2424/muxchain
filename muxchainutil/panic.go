@@ -3,7 +3,7 @@ package muxchainutil
 import (
 	"net/http"
 
-	"stephensearles.com/muxchain"
+	"github.com/stephens2424/muxchain"
 )
 
 // DefaultPanicRecovery is a handler that enables basic panic recovery

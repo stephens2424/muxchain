@@ -4,7 +4,7 @@ import (
 	"compress/gzip"
 	"net/http"
 
-	"stephensearles.com/muxchain"
+	"github.com/stephens2424/muxchain"
 )
 
 // Gzip is a handler that enables gzip content encoding for all handlers

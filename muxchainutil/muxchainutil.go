@@ -3,7 +3,7 @@ package muxchainutil
 import (
 	"net/http"
 
-	"stephensearles.com/muxchain"
+	"github.com/stephens2424/muxchain"
 )
 
 // Default is a handler that enables panic recovery, logging to standard out, and gzip for all
