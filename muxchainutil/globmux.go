@@ -47,6 +47,7 @@ func (g *GlobMux) match(path string) (h http.Handler, pattern string) {
 			if matchLen > longestMatchLen {
 				h = handler
 				pattern = matchPattern
+				longestMatchLen = matchLen
 			}
 		}
 	}
@@ -55,15 +56,16 @@ func (g *GlobMux) match(path string) (h http.Handler, pattern string) {
 
 func pathMatch(pattern, path string) bool {
 	pathParts := strings.Split(path, "/")
-	patternParts := strings.Split(path, "/")
+	patternParts := strings.Split(pattern, "/")
+	if len(pathParts) < len(patternParts) {
+		return false
+	}
 	for i, patternPart := range patternParts {
-		if len(pathParts) > i {
-			switch pathParts[i] {
-			case "*":
-			case patternPart:
-			default:
-				return false
-			}
+		switch patternPart {
+		case "*":
+		case pathParts[i]:
+		default:
+			return false
 		}
 	}
 	return true
