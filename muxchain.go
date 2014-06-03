@@ -10,7 +10,7 @@ func Chain(pattern string, handlers ...http.Handler) {
 }
 
 type MuxChain struct {
-	*http.ServeMux
+	Muxer
 }
 
 func (m *MuxChain) ServeHTTPChain(w http.ResponseWriter, req *http.Request, handlers ...http.Handler) {
@@ -23,8 +23,8 @@ func (m *MuxChain) ServeHTTPChain(w http.ResponseWriter, req *http.Request, hand
 // of the chain is reached. If one of the handlers is a Muxer (e.g. http.ServeMux),
 // the MuxChain will skip it if no pattern matches.
 func (m *MuxChain) Chain(pattern string, handlers ...http.Handler) {
-	if m.ServeMux == nil {
-		m.ServeMux = http.NewServeMux()
+	if m.Muxer == nil {
+		m.Muxer = http.NewServeMux()
 	}
 	m.HandleFunc(pattern, func(w http.ResponseWriter, req *http.Request) {
 		if len(handlers) == 0 {
@@ -97,7 +97,10 @@ func handle(h http.Handler, remaining []http.Handler, w http.ResponseWriter, req
 
 // Muxer identifies types that act as a ServeMux.
 type Muxer interface {
+	http.Handler
+	Handle(pattern string, handler http.Handler)
 	Handler(r *http.Request) (h http.Handler, pattern string)
+	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
 }
 
 type checked struct {

@@ -39,6 +39,10 @@ func (m *MethodMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.ServeHTTP(w, req)
 }
 
+func (m *MethodMux) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	m.Handle(pattern, http.HandlerFunc(handler))
+}
+
 // HandleMethods registers a pattern to a handler for the given methods.
 func (m *MethodMux) HandleMethods(pattern string, h http.Handler, methods ...string) {
 	for _, method := range methods {

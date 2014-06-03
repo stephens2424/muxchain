@@ -1,7 +1,9 @@
 package muxchainutil
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/stephens2424/muxchain"
 )
@@ -26,6 +28,7 @@ func (p PanicRecovery) ServeHTTPChain(w http.ResponseWriter, req *http.Request, 
 	defer func() {
 		if r := recover(); r != nil {
 			recovery.ServeHTTP(w, req)
+			fmt.Fprintln(os.Stderr, r)
 		}
 	}()
 	muxchain.HandleChain(w, req, h...)

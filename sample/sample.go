@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/muxchain"
-	"github.com/muxchain/muxchainutil"
+	"github.com/stephens2424/muxchain"
+	"github.com/stephens2424/muxchain/muxchainutil"
 )
 
 func main() {
