@@ -67,7 +67,7 @@ func (m *MethodMux) Handler(req *http.Request) (h http.Handler, pattern string) 
 	if pattern != "" {
 		return
 	}
-	return m.handleMethod(req.Method, req)
+	return m.handleMethod("*", req)
 }
 
 // handleMethod selects a handler for a request for a particular method, ignoring the method
