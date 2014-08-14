@@ -57,15 +57,15 @@ func (g *GlobMux) match(path string) (h http.Handler, pattern string) {
 func pathMatch(pattern, path string) bool {
 	pathParts := strings.Split(path, "/")
 	patternParts := strings.Split(pattern, "/")
-	if len(pathParts) < len(patternParts) {
-		return false
-	}
+
 	for i, patternPart := range patternParts {
+
 		switch patternPart {
 		case "*":
-		case pathParts[i]:
 		default:
-			return false
+			if i > len(pathParts)-1 || pathParts[i] != patternPart {
+				return false
+			}
 		}
 	}
 	return true

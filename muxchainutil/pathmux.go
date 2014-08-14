@@ -21,6 +21,11 @@ func NewPathMux() *PathMux {
 // specified by a leading colon. For instance, "/order/:id" would map to handlers the
 // same as "/order/*" on a GlobMux, however, handlers will see requests as if
 // the query were "/order/?id=".
+//
+// Handlers will also match if a partial query is provided. For instance, /order/x
+// will match /order/:id/:name, and the name variable will be empty. Variables are always
+// matched from left to right and the handler with the most matches wins (with static strings
+// beating variables).
 func (p *PathMux) Handle(pattern string, h http.Handler) {
 	patternParts := strings.Split(pattern, "/")
 	variables := make(map[int]string)
