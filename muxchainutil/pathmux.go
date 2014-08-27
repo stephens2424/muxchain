@@ -9,16 +9,12 @@ import (
 // as query parameters to the request for handlers.
 type PathMux struct {
 	*GlobMux
-	patternVariables map[string]map[int]pathVariable // maps pattern component index to variable name
+	patternVariables map[string]map[int]string // maps pattern component index to variable name
 }
 
 // NewPathMuxer initializes a PathMux.
 func NewPathMux() *PathMux {
-	return &PathMux{NewGlobMux(), make(map[string]map[int]pathVariable)}
-}
-
-type pathVariable struct {
-	name, def string
+	return &PathMux{NewGlobMux(), make(map[string]map[int]string)}
 }
 
 // Handle registers a handler to a pattern. Patterns may conatain variable components
@@ -30,37 +26,13 @@ type pathVariable struct {
 // will match /order/:id/:name, and the name variable will be empty. Variables are always
 // matched from left to right and the handler with the most matches wins (with static strings
 // beating variables).
-//
-// Path components can have default components if they are the last component or are followed
-// only by path components with default values. Default components are specified by an extra
-// colon, followed by the default value. For example:
-//
-//    /image/:name/:size:100x100        // valid
-//    /image/:name:newimg/:size:100x100 // valid
-//    /image/:name/size/:size           // invalid
-//    /image/:name:newimg/:size         // invalid
-//
-// If a passed pattern breaks these rules, this function will panic.
 func (p *PathMux) Handle(pattern string, h http.Handler) {
 	patternParts := strings.Split(pattern, "/")
-	variables := make(map[int]pathVariable)
-	foundDefault := false
-
+	variables := make(map[int]string)
 	for i, part := range patternParts {
 		if strings.HasPrefix(part, ":") {
-			varParts := strings.SplitN(part[1:], ":", 2)
-			variable := pathVariable{name: varParts[0]}
-			if len(varParts) == 2 {
-				foundDefault = true
-				variable.def = varParts[1]
-			} else if foundDefault {
-				panic("pathmux: invalid pattern: cannot have defaulted component followed by non-defaulted component")
-			}
-
-			variables[i] = variable
+			variables[i] = part[1:]
 			patternParts[i] = "*"
-		} else if foundDefault {
-			panic("pathmux: invalid pattern: cannot have defaulted component followed by non-defaulted component")
 		}
 	}
 	pattern = strings.Join(patternParts, "/")
@@ -75,9 +47,9 @@ func (p *PathMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h, pattern := p.Handler(req)
 	if variables, hasVariables := p.patternVariables[pattern]; hasVariables {
 		for i, part := range strings.Split(req.URL.Path, "/") {
-			if variable, ok := variables[i]; ok {
-				req.URL.Query().Set(variable.name, part)
-				req.Form.Set(variable.name, part)
+			if varname, ok := variables[i]; ok {
+				req.URL.Query().Set(varname, part)
+				req.Form.Set(varname, part)
 			}
 		}
 	}
