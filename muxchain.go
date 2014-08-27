@@ -9,6 +9,13 @@ func Chain(pattern string, handlers ...http.Handler) {
 	Default.Chain(pattern, handlers...)
 }
 
+// ChainHandlers chains together a set of handlers under an empty path.
+func ChainHandlers(handlers ...http.Handler) http.Handler {
+	m := &MuxChain{}
+	m.Chain("/", handlers...)
+	return m
+}
+
 type MuxChain struct {
 	Muxer
 }
