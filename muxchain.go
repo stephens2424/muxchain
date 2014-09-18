@@ -91,7 +91,11 @@ func handle(h http.Handler, remaining []http.Handler, w http.ResponseWriter, req
 		}
 	}
 
-	cw := &checked{w, false}
+	var cw CheckedResponseWriter
+	var ok bool
+	if cw, ok = w.(CheckedResponseWriter); !ok {
+		cw = &checked{w, false}
+	}
 	if chainedHandler, ok := h.(ChainedHandler); ok {
 		chainedHandler.ServeHTTPChain(cw, req, remaining...)
 		return true
@@ -99,7 +103,7 @@ func handle(h http.Handler, remaining []http.Handler, w http.ResponseWriter, req
 
 	// Serve for the current handler
 	h.ServeHTTP(cw, req)
-	return cw.written
+	return cw.Written()
 }
 
 // Muxer identifies types that act as a ServeMux.
@@ -110,6 +114,11 @@ type Muxer interface {
 	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
 }
 
+type CheckedResponseWriter interface {
+	http.ResponseWriter
+	Written() bool
+}
+
 type checked struct {
 	http.ResponseWriter
 	written bool
@@ -118,4 +127,8 @@ type checked struct {
 func (c *checked) Write(p []byte) (int, error) {
 	c.written = true
 	return c.ResponseWriter.Write(p)
+}
+
+func (c *checked) Written() bool {
+	return c.written
 }

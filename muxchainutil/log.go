@@ -84,3 +84,7 @@ func (r *responseWriter) Write(b []byte) (int, error) {
 	r.written += n
 	return n, err
 }
+
+func (r *responseWriter) Written() bool {
+	return r.written > 0
+}
