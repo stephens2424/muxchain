@@ -49,7 +49,7 @@ func (l LogHandler) ServeHTTPChain(w http.ResponseWriter, req *http.Request, h .
 	muxchain.HandleChain(wr, req, h...)
 }
 
-func (l LogHandler) header(w *responseWriter, req *http.Request) string {
+func (l LogHandler) header(w trackedResponse, req *http.Request) string {
 	buf := &bytes.Buffer{}
 	if Lmethod&l.flag != 0 {
 		fmt.Fprintf(buf, "%s ", req.Method)
@@ -58,10 +58,10 @@ func (l LogHandler) header(w *responseWriter, req *http.Request) string {
 		fmt.Fprintf(buf, "%s ", req.URL.Path)
 	}
 	if LresponseStatus&l.flag != 0 {
-		fmt.Fprintf(buf, "%d ", w.code)
+		fmt.Fprintf(buf, "%d ", w.Status())
 	}
 	if LcontentLength&l.flag != 0 {
-		fmt.Fprintf(buf, "%d ", w.written)
+		fmt.Fprintf(buf, "%d ", w.Size())
 	}
 	return buf.String()
 }
@@ -80,6 +80,9 @@ func (r *responseWriter) WriteHeader(code int) {
 }
 
 func (r *responseWriter) Write(b []byte) (int, error) {
+	if r.code == 0 {
+		r.WriteHeader(http.StatusOK)
+	}
 	n, err := r.ResponseWriter.Write(b)
 	r.written += n
 	return n, err
@@ -87,4 +90,19 @@ func (r *responseWriter) Write(b []byte) (int, error) {
 
 func (r *responseWriter) Written() bool {
 	return r.written > 0
+}
+
+func (r *responseWriter) Size() int {
+	return r.written
+}
+
+func (r *responseWriter) Status() int {
+	return r.code
+}
+
+type trackedResponse interface {
+	http.ResponseWriter
+	Size() int
+	Status() int
+	Written() bool
 }

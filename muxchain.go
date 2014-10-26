@@ -114,6 +114,8 @@ type Muxer interface {
 	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
 }
 
+// CheckedResponseWriter augments http.ResponseWriter to indicate if the response has been
+// written to.
 type CheckedResponseWriter interface {
 	http.ResponseWriter
 	Written() bool
