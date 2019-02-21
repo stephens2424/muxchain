@@ -12,7 +12,7 @@ type PathMux struct {
 	patternVariables map[string]map[int]string // maps pattern component index to variable name
 }
 
-// NewPathMuxer initializes a PathMux.
+// NewPathMux initializes a PathMux.
 func NewPathMux() *PathMux {
 	return &PathMux{NewGlobMux(), make(map[string]map[int]string)}
 }
